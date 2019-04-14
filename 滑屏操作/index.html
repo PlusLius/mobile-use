@@ -119,17 +119,17 @@
                     case 'rotateZ':
                     case 'skewX':
                     case 'skewY':
-                        str +=  `${attr}(${val}deg)`
+                        str +=  `${attr}(${el.transform[attr]}deg)`
                         break;
                     case 'scale':
                     case 'scaleX':
                     case 'scaleY':
-                        str += `${attr}(${val})`
+                        str += `${attr}(${el.transform[attr]})`
                         break;
                     case 'translateX':
                     case 'translateY':
                     case 'translateZ':
-                        str += `${attr}(${val}px)`
+                        str += `${attr}(${el.transform[attr]}px)`
                         break;
                 }
             })

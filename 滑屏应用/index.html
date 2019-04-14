@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="./touch.js"></script>
+    <title>轮播图</title>
+    <style>
+        body,html{
+            padding: 0;
+            margin: 0;
+        }
+        ul{
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        img{
+            vertical-align: top;
+        }
+        .wrap{
+            position: relative;
+            overflow: hidden;
+        }
+        .list{
+            overflow: hidden;
+        }
+        .list li {
+            float: left;
+        }
+        .list img {
+            width: 100%;
+        }
+        .nav {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 10px;
+            text-align: center;
+            height: 10px;
+        }
+        .nav a{
+            vertical-align: top;
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 5px;
+            background: #FFF;
+        }
+        .nav .focus{
+            background: #6f0;
+        }
+        .textList li {
+            font: 16px/34px "宋体";
+            border-bottom: 1px solid #000;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="wrap">
+            <ul class="list">
+                <li>
+                    <a href="#">
+                        <img src="../imgs/1.png" alt="">
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <img src="../imgs/2.png" alt="">
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <img src="../imgs/3.png" alt="">
+                    </a>
+                </li>
+            </ul>
+            <div class="nav">
+                    <a href="javascript:;" class="focus"></a>
+                    <a href="javascript:;"></a>
+                    <a href="javascript:;"></a>
+            </div>
+        </div>
+        <ul class="textList">
+
+            </ul>
+    </div>
+    <script>
+        (function(){
+            const list = document.querySelector('.textList')
+            list.innerHTML = Array(50).fill(0).reduce((str,item,index) => (
+                str += `<li>${++index}</li>`
+            ),'')
+        })()
+        //布局
+        ~(function(){
+            const wrap = document.querySelector('.wrap')
+            const list = document.querySelector('.list')
+            list.innerHTML += list.innerHTML
+            const imgs = Array.from(list.children)
+
+            //设置list的总宽度
+            list.style.width = imgs.length * wrap.clientWidth + 'px'
+            //设置图片的宽度
+            imgs.forEach(img => {
+                img.style.width = wrap.clientWidth + 'px'
+            })
+        })()
+        //使用swiper
+        ~(function(){
+            const wrap = document.querySelector('.wrap')
+            const list = document.querySelector('.list')
+            const imgW = wrap.clientWidth
+            const imgs = list.children
+            const navs = Array.from(document.querySelectorAll('.nav a'))
+            let timer = null
+            let pos = 0;
+            swiper({
+                wrap:wrap,
+                dir:"x",
+                start(){
+                    clearInterval(timer);
+                    list.style.transition = 'none'
+                    let x = css(list,'translateX')
+                    pos = Math.round(Math.abs(x / imgW))
+                    if(pos == 0){
+                        pos = imgs.length / 2
+                    } else if (pos == imgs.length - 1){
+                        pos = imgs.length / 2 -1
+                    }
+                    let target = (-pos * imgW)
+                    css(list,'translateX',target)
+                },
+                end(){
+                    let x = css(list,'translateX')
+                    pos = Math.round(Math.abs(x/imgW))
+                    let target = -pos * imgW
+                    list.style.transition = '.3s'
+                    css(list,'translateX',target)
+                    navs.forEach(a => {
+                        a.className = ""
+                    })
+                    navs[pos%navs.length].className = "focus"
+                    auto();
+                }
+            })
+            auto();
+            function auto(){
+                timer = setInterval(() => {
+                    if(pos == imgs.length -1){
+                        pos = imgs.length / 2 -1
+                        list.style.transition = "none";
+                        css(list,"translateX",-pos*imgW);
+                    }
+                    pos ++
+                    setTimeout(() => {
+                        list.style.transition = '.3s'
+                        css(list,"translateX",-pos*imgW);
+                    },50)
+                    navs.forEach(a => a.className = "")
+                    navs[pos % navs.length].className = 'focus'
+                },3000)
+            }
+        })()
+      
+        function swiper(options){
+            const wrap = options.wrap
+            const scroll = wrap.children[0]
+            const dir = options.dir
+            const dirTranslate = {
+                x:'translateX',
+                y:'translateY'
+            }
+            const isDir = {
+                x:false,
+                y:false
+            }
+            let isFirst = true
+            let startPoint = {}
+            let startEl = {}
+            let lastPoint = {}
+            let target = {}
+            let dis = {}
+            let nowPoint = {}
+            css(scroll,'translateX',0)
+            css(scroll,'translateY',0)
+            css(scroll,'translateZ',0)
+            wrap.addEventListener('touchstart',e => {
+                options.start && options.start.call(wrap,e)
+                const touch = e.changedTouches[0]
+                startPoint = {
+                    x:touch.pageX,
+                    y:touch.pageY
+                }
+                startEl = {
+                    x:css(scroll,'translateX'),
+                    y:css(scroll,'translateY')
+                }
+            })
+            wrap.addEventListener('touchmove',e => {
+                const touch = e.changedTouches[0]
+                nowPoint = {
+                    x:touch.pageX,
+                    y:touch.pageY
+                }
+
+                if(lastPoint.x == nowPoint.x
+                &&lastPoint.y == nowPoint.y){//上一次坐标 和 这次坐标完全一致，我就不做任何处理
+                    return;
+                }
+
+                dist = {
+                    x: (nowPoint.x - startPoint.x),
+                    y: (nowPoint.y - startPoint.y)
+                }
+
+                if(isFirst){
+                    isFirst = false;
+                    if(Math.abs(dist.x) > Math.abs(dist.y)){
+                        isDir.x = true
+                    } else {
+                        isDir.y = true
+                    }
+                }
+                
+                target = {
+                    x:startEl.x + dist.x,
+                    y:startEl.y + dist.y
+                }
+
+                if(isDir[dir]){
+                    css(scroll,dirTranslate[dir],target[dir])
+                    e.preventDefault();
+                }
+
+                lastPoint.x = nowPoint.x;
+		        lastPoint.y = nowPoint.y;
+              
+            })
+            wrap.addEventListener('touchend',e => {
+                options.end && options.end.call(wrap,e)
+                isFirst = true;
+                isDir = { 
+                    x: false,
+                    y: false
+                }
+            })
+        }
+    </script>
+</body>
+</html>

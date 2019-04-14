@@ -110,3 +110,149 @@ function tap(el,fn){
 }
 ```
 
+## 轮播图
+
+```js
+//使用swiper
+~(function(){
+    const wrap = document.querySelector('.wrap')
+    const list = document.querySelector('.list')
+    const imgW = wrap.clientWidth
+    const imgs = list.children
+    const navs = Array.from(document.querySelectorAl('.nav a'))
+    let timer = null
+    let pos = 0;
+    //使用轮播图
+    swiper({
+        wrap:wrap,
+        dir:"x",
+        start(){
+            clearInterval(timer);
+            list.style.transition = 'none'
+            let x = css(list,'translateX')
+            pos = Math.round(Math.abs(x / imgW))
+            if(pos == 0){
+                pos = imgs.length / 2
+            } else if (pos == imgs.length - 1){
+                pos = imgs.length / 2 -1
+            }
+            let target = (-pos * imgW)
+            css(list,'translateX',target)
+        },
+        end(){
+            let x = css(list,'translateX')
+            pos = Math.round(Math.abs(x/imgW))
+            let target = -pos * imgW
+            list.style.transition = '.3s'
+            css(list,'translateX',target)
+            navs.forEach(a => {
+                a.className = ""
+            })
+            navs[pos%navs.length].className = "focus"
+            auto();
+        }
+    })
+    //自动轮播
+    auto();
+    function auto(){
+        timer = setInterval(() => {
+            if(pos == imgs.length -1){
+                pos = imgs.length / 2 -1
+                list.style.transition = "none";
+                css(list,"translateX",-pos*imgW);
+            }
+            pos ++
+            setTimeout(() => {
+                list.style.transition = '.3s'
+                css(list,"translateX",-pos*imgW);
+            },50)
+            navs.forEach(a => a.className = "")
+            navs[pos % navs.length].className = 'focus'
+        },3000)
+    }
+})()
+
+function swiper(options){
+    const wrap = options.wrap
+    const scroll = wrap.children[0]
+    const dir = options.dir
+    const dirTranslate = {
+        x:'translateX',
+        y:'translateY'
+    }
+    const isDir = {
+        x:false,
+        y:false
+    }
+    let isFirst = true
+    let startPoint = {}
+    let startEl = {}
+    let lastPoint = {}
+    let target = {}
+    let dis = {}
+    let nowPoint = {}
+    css(scroll,'translateX',0)
+    css(scroll,'translateY',0)
+    css(scroll,'translateZ',0)
+    wrap.addEventListener('touchstart',e => {
+        options.start && options.start.call(wrap,e)
+        const touch = e.changedTouches[0]
+        startPoint = {
+            x:touch.pageX,
+            y:touch.pageY
+        }
+        startEl = {
+            x:css(scroll,'translateX'),
+            y:css(scroll,'translateY')
+        }
+    })
+    wrap.addEventListener('touchmove',e => {
+        const touch = e.changedTouches[0]
+        nowPoint = {
+            x:touch.pageX,
+            y:touch.pageY
+        }
+
+        if(lastPoint.x == nowPoint.x
+        &&lastPoint.y == nowPoint.y){//上一次坐标 和 这次坐标完全一致，我就不做任何处理
+            return;
+        }
+
+        dist = {
+            x: (nowPoint.x - startPoint.x),
+            y: (nowPoint.y - startPoint.y)
+        }
+
+        if(isFirst){
+            isFirst = false;
+            if(Math.abs(dist.x) > Math.abs(dist.y)){
+                isDir.x = true
+            } else {
+                isDir.y = true
+            }
+        }
+        
+        target = {
+            x:startEl.x + dist.x,
+            y:startEl.y + dist.y
+        }
+
+        if(isDir[dir]){
+            css(scroll,dirTranslate[dir],target[dir])
+            e.preventDefault();
+        }
+
+        lastPoint.x = nowPoint.x;
+        lastPoint.y = nowPoint.y;
+        
+    })
+    wrap.addEventListener('touchend',e => {
+        options.end && options.end.call(wrap,e)
+        isFirst = true;
+        isDir = { 
+            x: false,
+            y: false
+        }
+    })
+}
+```
