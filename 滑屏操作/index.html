@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>滑屏操作</title>
+    <style>
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+        html,body {
+            margin: 0;
+            height: 100%;
+        }
+        .page {
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        header {
+            height: 40px;
+            background: #000;
+            font:16px/40px "宋体";
+            color:#fff;
+            text-align: center;
+            transition: .3s;
+        }
+        .wrap {
+             position: absolute;
+             left: 0;
+             right: 0;
+             top: 40px;
+             bottom: 0;
+        }
+        .list {
+            position: absolute;
+            left: 0;
+            top:0;
+            width: 100%;
+        }
+        .list li {
+            font:14px/40px '宋体';
+            border-bottom: 1px solid #000;
+            text-indent: 2em;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header class="header">top</header>
+        <div class="wrap">
+            <ul class="list">
+
+            </ul>
+        </div>
+    </div>
+    <script>
+        //布局
+        (function(){
+            const list = document.querySelector('.list')
+            const res = Array(50).fill(0).reduce((str,item,index) => (
+                 str += `<li>${++index}</li>`
+            ),'')
+            list.innerHTML = res
+        })()
+        //滑屏
+        ~(function(){
+            const wrap = document.querySelector('.wrap')
+            const scroll = wrap.querySelector('.list')
+            let startPoint,lastPoint,elStart
+            wrap.addEventListener('touchstart',e => {
+                startPoint = {
+                    x:e.changedTouches[0].pageX,
+                    y:e.changedTouches[0].pageY,
+                }
+                elStart = css(scroll,'top')
+            })
+            wrap.addEventListener('touchmove',e => {
+                lastPoint = {
+                    x:e.changedTouches[0].pageX,
+                    y:e.changedTouches[0].pageY,
+                }
+                target = lastPoint.y - startPoint.y + elStart
+                css(scroll,'top',target)
+            })
+        })()
+        //防止误触并且使用transform移动
+        ~(function(){
+            const title = document.querySelector('.header')
+            css(title,"translateY",0);
+            tap(title,() => {
+                let y = css(title,"translateY")
+                css(title,"translateY", y + 10)
+                // transform(title,"translateX",100);
+		        // transform(title,"translateY",200);
+            //    let opacity = css(title,'opacity')
+            //    if(opacity == 1){
+            //     css(title,'opacity',.1)
+            //    }else{
+            //     css(title,'opacity',1)
+            //    }
+            })
+        })()
+
+        function transform(el,attr,val){
+            if(!el.transform)el.transform = {};
+            if(val === undefined)return el.transform[attr];
+
+            el.transform[attr] = val
+            let str = ""
+            Object.keys(el.transform).forEach((attr) => {
+                switch(attr){
+                    case 'rotate':
+                    case 'rotateX':
+                    case 'rotateY':
+                    case 'rotateZ':
+                    case 'skewX':
+                    case 'skewY':
+                        str +=  `${attr}(${val}deg)`
+                        break;
+                    case 'scale':
+                    case 'scaleX':
+                    case 'scaleY':
+                        str += `${attr}(${val})`
+                        break;
+                    case 'translateX':
+                    case 'translateY':
+                    case 'translateZ':
+                        str += `${attr}(${val}px)`
+                        break;
+                }
+            })
+            el.style.transform = str
+        }
+
+        function tap(el,fn){
+            let startPoint,lastPoint
+            el.addEventListener('touchstart',e => {
+                startPoint = {
+                    x:e.changedTouches[0].pageX,
+                    y:e.changedTouches[0].pageY
+                }
+            })
+            el.addEventListener('touchend',e => {
+                lastPoint = {
+                    x:e.changedTouches[0].pageX,
+                    y:e.changedTouches[0].pageY
+                }
+                if(Math.abs(lastPoint.x - startPoint.x) < 5 && Math.abs(lastPoint.y - startPoint.y) < 5){
+                    fn && fn.call(el,e)
+                }
+            })
+        }
+
+        function css(el,attr,val){
+            let transformAttr = ["rotate","rotateX","rotateY","rotateZ","skewX","skewY","scale","scaleX","scaleY","translateX","translateY","translateZ"];
+            if(transformAttr.includes(attr)){
+                return transform(el,attr,val)
+            }
+            if(val === undefined){
+               return parseFloat(getComputedStyle(el)[attr])
+            }
+            if(attr == 'opacity'){
+                el.style[attr] = val
+            }else {
+                el.style[attr] = val + 'px'
+            }
+        }
+      
+    </script>
+</body>
+</html>
