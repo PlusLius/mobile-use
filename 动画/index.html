@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Animation</title>
+    <script src="../touch.js"> </script>
+    <script src="./tween.js" ></script>
+    <style>
+        .box {
+            width: 100px;
+            height: 100px;
+            background: red;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="box"></div>
+    <script>
+        function startMove(options){
+            let t = 0 //当前执行次数
+            const b = {} //起始位置
+            const c = {} //结束位置
+            const d = Math.ceil(options.time / 16.7) //执行总次数
+
+            cancelAnimationFrame(options.el.timer)
+
+            Object.keys(options.target).forEach(props => {
+                b[props] = css(options.el,props)
+                c[props] = options.target[props] - b[props]
+            })
+
+            options.el.timer = requestAnimationFrame(move)
+
+            function move(){
+                if(t > d) {
+                    cancelAnimationFrame(options.el.timer)
+                }else{
+                    t++
+                    Object.keys(options.target).forEach(props => {
+                         let val = Tween[options.type](t,b[props],c[props],d)
+                         css(options.el,props,val)
+                    })
+                    options.el.timer = requestAnimationFrame(move)
+                }
+            }
+
+        }
+        ~(function(){
+            const box = document.querySelector('.box')
+            css(box,'translateX',0)
+            css(box,'translateY',0)
+
+            startMove({
+                el:box,
+                type:'backBoth',
+                time:500,
+                target:{
+                    translateX:300,
+                    translateY:400
+                }
+            })
+        })()
+    </script>
+</body>
+</html>

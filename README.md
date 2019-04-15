@@ -256,3 +256,54 @@ function swiper(options){
     })
 }
 ```
+
+## 添加动画
+
+```js
+function startMove(options){
+    //16.7毫秒是屏幕的渲染频率，requestAnimationFrame每秒渲染60帧
+    let t = 0 //当前执行次数
+    const b = {} //起始位置
+    const c = {} //结束位置
+    const d = Math.ceil(options.time / 16.7) //执行总次数
+
+    cancelAnimationFrame(options.el.timer)
+
+    Object.keys(options.target).forEach(props => {
+        b[props] = css(options.el,props)
+        c[props] = options.target[props] - b[props]
+    })
+
+    options.el.timer = requestAnimationFrame(move)
+
+    function move(){
+        if(t > d) {
+            cancelAnimationFrame(options.el.timer)
+        }else{
+            t++ //每次执行一帧
+            Object.keys(options.target).forEach(props => {
+                    let val = Tween[options.type](t,b[props],c[props],d)
+                    css(options.el,props,val)
+            })
+            options.el.timer = requestAnimationFrame(move)
+        }
+    }
+
+}
+~(function(){
+    const box = document.querySelector('.box')
+    css(box,'translateX',0)
+    css(box,'translateY',0)
+
+    startMove({
+        el:box,
+        type:'backBoth', 
+        time:500,
+        target:{
+            translateX:300,
+            translateY:400
+        }
+    })
+})()
+
+```
